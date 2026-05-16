@@ -1,4 +1,4 @@
-import { PlayCircleIcon } from 'lucide-react';
+import { PlayCircleIcon, StopCircleIcon } from 'lucide-react';
 import { Cycles } from '../Cycles';
 import { DefaultButton } from '../DefaultButton';
 import { DefaultInput } from '../DefaultInput';
@@ -57,6 +57,27 @@ export function MainForm() {
     });
   }
 
+  function handleInterruptTask() {
+    setState(prev => {
+      return {
+        ...prev,
+        secondsRemaining: 0,
+        formatedSecondsRemaining: '00:00',
+        activeTask: null,
+        tasks: prev.tasks.map(task => {
+          if (prev.activeTask && prev.activeTask.id === task.id) {
+            return {
+              ...task,
+              interruptDate: Date.now(),
+            };
+          }
+
+          return task;
+        }),
+      };
+    });
+  }
+
   return (
     <form onSubmit={handleCreateNewTask} className='form' action=''>
       <div className='formRow'>
@@ -66,16 +87,55 @@ export function MainForm() {
           type='text'
           placeholder='Digite alguma coisa'
           ref={taskNameInput}
+          disabled={!!state.activeTask}
         />
       </div>
       <div className='formRow'>
         <p>Lorem ipsum dolor sit amet.</p>
       </div>
+
+      {state.currentCycle > 0 && (
+        <div className='formRow'>
+          <Cycles />
+        </div>
+      )}
+
+      {/*
+          Usamos um ternario com keys para alternar entre os botoes de iniciar e interromper.
+          Como os botoes tem tipo e comportamento diferentes, a key ajuda o React a tratar
+          cada versao como um elemento distinto, evitando reaproveitamento indevido.
+          Outra opcao e usar blocos com &&; as duas abordagens funcionam.
+
+          {!state.activeTask && (
+            <DefaultButton type='submit' key='buttonStartTask' />
+          )}
+
+          {state.activeTask && (
+            <DefaultButton type='button' key='buttonInterruptTask' />
+          )}
+    */}
+
       <div className='formRow'>
-        <Cycles />
-      </div>
-      <div className='formRow'>
-        <DefaultButton color='green' icon={<PlayCircleIcon />} />
+        {!state.activeTask ? (
+          <DefaultButton
+            aria-label='Iniciar uma nova tarefa'
+            title='Iniciar uma nova tarefa'
+            type='submit'
+            color='green'
+            icon={<PlayCircleIcon />}
+            key='buttonStartTask'
+          />
+        ) : (
+          <DefaultButton
+            aria-label='Interromper tarefa em andamento'
+            title='Interromper tarefa em andamento'
+            type='button'
+            color='red'
+            icon={<StopCircleIcon />}
+            onClick={handleInterruptTask}
+            key='buttonInterruptTask'
+          />
+        )}
       </div>
     </form>
   );
